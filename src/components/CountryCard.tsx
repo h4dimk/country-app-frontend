@@ -16,6 +16,8 @@ function parseUtcOffsetMinutes(offset: string): number | null {
   return sign * (hours * 60 + minutes);
 }
 
+
+
 function timeForOffset(offsetStr: string): string | null {
   const minutesOffset = parseUtcOffsetMinutes(offsetStr);
   if (minutesOffset == null) return null;

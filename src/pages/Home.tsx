@@ -8,15 +8,8 @@ import Error from "../components/Error";
 import type { SearchParams } from "../types";
 
 export default function Home() {
-  const {
-    countries,
-    loading,
-    error,
-    hasMore,
-    loadMore,
-    search,
-    reset,
-  } = useCountries();
+  const { countries, loading, error, hasMore, loadMore, search, reset } =
+    useCountries();
 
   const [useInfiniteScroll, setUseInfiniteScroll] = useState(true);
   const [currentFilters, setCurrentFilters] = useState<SearchParams>({});
@@ -26,92 +19,106 @@ export default function Home() {
   const lastElementRef = useCallback(
     (node: HTMLDivElement | null) => {
       if (loading || !useInfiniteScroll) return;
-      
+
       if (observer.current) observer.current.disconnect();
-      
+
       observer.current = new IntersectionObserver((entries) => {
         if (entries[0].isIntersecting && hasMore) {
           loadMore();
         }
       });
-      
+
       if (node) observer.current.observe(node);
     },
     [loading, hasMore, loadMore, useInfiniteScroll]
   );
 
-  const handleSearch = useCallback((searchTerm: string) => {
-    setCurrentSearchTerm(searchTerm);
-    
-    if (searchTerm.trim()) {
-      // Combine search term with current filters
-      const searchParams: SearchParams = {
-        ...currentFilters,
-        name: searchTerm,
-        capital: searchTerm,
-      };
-      search(searchParams);
-    } else {
-      // If no search term, just apply current filters
-      if (Object.keys(currentFilters).length > 0) {
-        search(currentFilters);
+  const handleSearch = useCallback(
+    (searchTerm: string) => {
+      setCurrentSearchTerm(searchTerm);
+
+      if (searchTerm.trim()) {
+        // Combine search term with current filters
+        const searchParams: SearchParams = {
+          ...currentFilters,
+          name: searchTerm,
+          capital: searchTerm,
+        };
+        search(searchParams);
+      } else {
+        // If no search term, just apply current filters
+        if (Object.keys(currentFilters).length > 0) {
+          search(currentFilters);
+        } else {
+          reset();
+        }
+      }
+    },
+    [search, reset, currentFilters]
+  );
+
+  const handleRegionFilter = useCallback(
+    (region: string) => {
+      const newFilters = { ...currentFilters };
+
+      if (region) {
+        newFilters.region = region;
+      } else {
+        delete newFilters.region;
+      }
+
+      setCurrentFilters(newFilters);
+
+      // Combine with current search term
+      if (currentSearchTerm.trim()) {
+        const searchParams: SearchParams = {
+          ...newFilters,
+          name: currentSearchTerm,
+          capital: currentSearchTerm,
+        };
+        search(searchParams);
+      } else if (Object.keys(newFilters).length > 0) {
+        search(newFilters);
       } else {
         reset();
       }
-    }
-  }, [search, reset, currentFilters]);
+    },
+    [search, reset, currentFilters, currentSearchTerm]
+  );
 
-  const handleRegionFilter = useCallback((region: string) => {
-    const newFilters = { ...currentFilters };
-    
-    if (region) {
-      newFilters.region = region;
-    } else {
-      delete newFilters.region;
-    }
-    
-    setCurrentFilters(newFilters);
-    
-    // Combine with current search term
-    if (currentSearchTerm.trim()) {
-      const searchParams: SearchParams = {
-        ...newFilters,
-        name: currentSearchTerm,
-        capital: currentSearchTerm,
-      };
-      search(searchParams);
-    } else if (Object.keys(newFilters).length > 0) {
-      search(newFilters);
-    } else {
-      reset();
-    }
-  }, [search, reset, currentFilters, currentSearchTerm]);
+  const handleTimezoneFilter = useCallback(
+    (timezone: string) => {
+      console.log("Timezone filter changed:", timezone);
+      const newFilters = { ...currentFilters };
 
-  const handleTimezoneFilter = useCallback((timezone: string) => {
-    const newFilters = { ...currentFilters };
-    
-    if (timezone.trim()) {
-      newFilters.timezone = timezone;
-    } else {
-      delete newFilters.timezone;
-    }
-    
-    setCurrentFilters(newFilters);
-    
-    // Combine with current search term
-    if (currentSearchTerm.trim()) {
-      const searchParams: SearchParams = {
-        ...newFilters,
-        name: currentSearchTerm,
-        capital: currentSearchTerm,
-      };
-      search(searchParams);
-    } else if (Object.keys(newFilters).length > 0) {
-      search(newFilters);
-    } else {
-      reset();
-    }
-  }, [search, reset, currentFilters, currentSearchTerm]);
+      if (timezone.trim()) {
+        newFilters.timezone = timezone;
+      } else {
+        delete newFilters.timezone;
+      }
+
+      console.log("New filters:", newFilters);
+      setCurrentFilters(newFilters);
+
+      // Combine with current search term
+      if (currentSearchTerm.trim()) {
+        const searchParams: SearchParams = {
+          ...newFilters,
+          name: currentSearchTerm,
+          capital: currentSearchTerm,
+        };
+        console.log("Searching with params:", searchParams);
+        search(searchParams);
+      } else if (Object.keys(newFilters).length > 0) {
+        console.log("Searching with filters:", newFilters);
+        search(newFilters);
+      } else {
+        console.log("Resetting to default");
+        reset();
+      }
+    },
+    [search, reset, currentFilters, currentSearchTerm]
+  );
 
   const handleLoadMore = useCallback(() => {
     if (!loading && hasMore) {
@@ -141,7 +148,8 @@ export default function Home() {
     );
   }
 
-  const hasActiveFilters = Object.keys(currentFilters).length > 0 || currentSearchTerm.trim() !== "";
+  const hasActiveFilters =
+    Object.keys(currentFilters).length > 0 || currentSearchTerm.trim() !== "";
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -163,12 +171,14 @@ export default function Home() {
             onRegionChange={handleRegionFilter}
             onTimezoneChange={handleTimezoneFilter}
           />
-          
+
           {/* Active Filters Display */}
           {hasActiveFilters && (
             <div className="flex items-center justify-between bg-blue-50 border border-blue-200 rounded-lg p-3">
               <div className="flex items-center space-x-2">
-                <span className="text-sm font-medium text-blue-800">Active Filters:</span>
+                <span className="text-sm font-medium text-blue-800">
+                  Active Filters:
+                </span>
                 {currentSearchTerm && (
                   <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                     Search: "{currentSearchTerm}"
@@ -193,7 +203,30 @@ export default function Home() {
               </button>
             </div>
           )}
-          
+
+          {/* Debug Info */}
+          {/* {process.env.NODE_ENV === "development" && (
+            <div className="bg-gray-100 border border-gray-300 rounded-lg p-3 mb-4">
+              <h4 className="text-sm font-medium text-gray-700 mb-2">
+                Debug Info:
+              </h4>
+              <div className="text-xs text-gray-600 space-y-1">
+                <div>Total Countries: {countries.length}</div>
+                <div>Current Filters: {JSON.stringify(currentFilters)}</div>
+                <div>Search Term: "{currentSearchTerm}"</div>
+                {countries.length > 0 && (
+                  <div>
+                    Sample Timezones:{" "}
+                    {countries
+                      .slice(0, 3)
+                      .map((c) => c.timezones?.join(", "))
+                      .join(" | ")}
+                  </div>
+                )}
+              </div>
+            </div>
+          )} */}
+
           {/* Load More Toggle */}
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
@@ -204,10 +237,12 @@ export default function Home() {
                   onChange={toggleScrollMode}
                   className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                 />
-                <span className="ml-2 text-sm text-gray-700">Infinite Scroll</span>
+                <span className="ml-2 text-sm text-gray-700">
+                  Infinite Scroll
+                </span>
               </label>
             </div>
-            
+
             {!useInfiniteScroll && hasMore && countries.length > 0 && (
               <button
                 onClick={handleLoadMore}
@@ -216,14 +251,30 @@ export default function Home() {
               >
                 {loading ? (
                   <>
-                    <svg className="animate-spin -ml-1 mr-3 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    <svg
+                      className="animate-spin -ml-1 mr-3 h-4 w-4 text-white"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      ></path>
                     </svg>
                     Loading...
                   </>
                 ) : (
-                  'Load More Countries'
+                  "Load More Countries"
                 )}
               </button>
             )}
@@ -234,11 +285,10 @@ export default function Home() {
         {countries.length > 0 && (
           <div className="mb-4">
             <p className="text-sm text-gray-600">
-              Showing {countries.length} {countries.length === 1 ? 'country' : 'countries'}
+              Showing {countries.length}{" "}
+              {countries.length === 1 ? "country" : "countries"}
               {hasActiveFilters && (
-                <span className="text-blue-600 ml-1">
-                  (filtered results)
-                </span>
+                <span className="text-blue-600 ml-1">(filtered results)</span>
               )}
             </p>
           </div>
@@ -261,26 +311,27 @@ export default function Home() {
         ) : !loading ? (
           <div className="text-center py-12">
             <div className="text-gray-400 mb-4">
-              <svg 
-                className="h-16 w-16 mx-auto" 
-                fill="none" 
-                stroke="currentColor" 
+              <svg
+                className="h-16 w-16 mx-auto"
+                fill="none"
+                stroke="currentColor"
                 viewBox="0 0 24 24"
               >
-                <path 
-                  strokeLinecap="round" 
-                  strokeLinejoin="round" 
-                  strokeWidth={1} 
-                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" 
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={1}
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
                 />
               </svg>
             </div>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No countries found</h3>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">
+              No countries found
+            </h3>
             <p className="text-gray-600">
-              {hasActiveFilters 
-                ? "Try adjusting your search or filter criteria" 
-                : "No countries available"
-              }
+              {hasActiveFilters
+                ? "Try adjusting your search or filter criteria"
+                : "No countries available"}
             </p>
             {hasActiveFilters && (
               <button
@@ -299,7 +350,9 @@ export default function Home() {
         {/* End of Results */}
         {!hasMore && countries.length > 0 && !loading && (
           <div className="text-center py-8">
-            <p className="text-gray-500">You've reached the end of the results</p>
+            <p className="text-gray-500">
+              You've reached the end of the results
+            </p>
           </div>
         )}
       </div>

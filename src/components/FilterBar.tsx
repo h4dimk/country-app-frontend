@@ -7,13 +7,43 @@ interface FilterBarProps {
   className?: string;
 }
 
+// Common timezone options as fallback
+const COMMON_TIMEZONES = [
+  "UTC+00:00",
+  "UTC+01:00",
+  "UTC+02:00",
+  "UTC+03:00",
+  "UTC+04:00",
+  "UTC+05:00",
+  "UTC+05:30",
+  "UTC+06:00",
+  "UTC+07:00",
+  "UTC+08:00",
+  "UTC+09:00",
+  "UTC+10:00",
+  "UTC+11:00",
+  "UTC+12:00",
+  "UTC-01:00",
+  "UTC-02:00",
+  "UTC-03:00",
+  "UTC-04:00",
+  "UTC-05:00",
+  "UTC-06:00",
+  "UTC-07:00",
+  "UTC-08:00",
+  "UTC-09:00",
+  "UTC-10:00",
+  "UTC-11:00",
+  "UTC-12:00",
+];
+
 export default function FilterBar({
   onRegionChange,
   onTimezoneChange,
   className = "",
 }: FilterBarProps) {
   const [regions, setRegions] = useState<string[]>([]);
-  // const [timezones, setTimezones] = useState<string[]>([]);
+  const [timezones, setTimezones] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -22,11 +52,12 @@ export default function FilterBar({
       try {
         const response = await getFilterOptions();
         setRegions(response.data.regions || []);
-        // setTimezones(response.data.timezones || []);
+        setTimezones(response.data.timezones || COMMON_TIMEZONES);
       } catch (error) {
         console.error("Failed to load filter options:", error);
         // Fallback to static options
         setRegions(["Asia", "Europe", "Africa", "Americas", "Oceania"]);
+        setTimezones(COMMON_TIMEZONES);
       } finally {
         setLoading(false);
       }
@@ -39,7 +70,7 @@ export default function FilterBar({
     onRegionChange(e.target.value);
   };
 
-  const handleTimezoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleTimezoneChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     onTimezoneChange(e.target.value);
   };
 
@@ -75,15 +106,20 @@ export default function FilterBar({
         >
           Timezone
         </label>
-        <input
+        <select
           id="timezone-filter"
-          type="text"
-          placeholder="Filter by timezone..."
           onChange={handleTimezoneChange}
           disabled={loading}
           className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
           aria-label="Filter by timezone"
-        />
+        >
+          <option value="">All Timezones</option>
+          {timezones.map((timezone) => (
+            <option key={timezone} value={timezone}>
+              {timezone}
+            </option>
+          ))}
+        </select>
       </div>
     </div>
   );

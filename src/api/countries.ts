@@ -48,8 +48,12 @@ export const searchCountries = async (
   params: SearchParams
 ): Promise<AxiosResponse<CountriesResponse>> => {
   try {
-    return await api.get("/countries/search", { params });
+    console.log("Searching countries with params:", params);
+    const response = await api.get("/countries/search", { params });
+    console.log("Search response:", response.data);
+    return response;
   } catch (error) {
+    console.error("Search error:", error);
     throw new Error(
       `Failed to search countries: ${
         error instanceof Error ? error.message : "Unknown error"
