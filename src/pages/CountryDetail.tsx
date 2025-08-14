@@ -146,6 +146,16 @@ export default function CountryDetail() {
                   label="Population"
                   value={country.population.toLocaleString()}
                 />
+
+                {/* New Flag Field */}
+                <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                  <p className="text-sm text-gray-500">Flag</p>
+                  <img
+                    src={country.flag}
+                    alt={`Flag of ${country.name}`}
+                    className="mt-2 w-24 h-auto border border-gray-300 rounded"
+                  />
+                </div>
               </div>
             </section>
 
